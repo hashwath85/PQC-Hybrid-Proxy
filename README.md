@@ -59,56 +59,55 @@ tls:
 
 forwarding:
   target_destination_url: "[http://127.0.0.1:8080/api/receive](http://127.0.0.1:8080/api/receive)"  # Internal legacy backend routing endpoint
-```
-<div style="page-break-before: always;"></div>
+## 4. Operational Staging & Verification
 
-4. Operational Staging & Verification
 Follow these sequential instructions to establish, verify, and run the hybrid proxy infrastructure locally.
 
-4.1 System Prerequisites
-Ensure the target environment contains Python 3.10+ along with liboqs and its respective Python bindings successfully linked to the runtime class paths. Install application layer packages via pip:
+### 4.1 System Prerequisites
+Ensure the target environment contains Python 3.10+ along with `liboqs` and its respective Python bindings successfully linked to the runtime class paths. Install application layer packages via pip:
 
-Bash
+<pre>
 pip install fastapi uvicorn requests pyyaml cryptography
-4.2 Generate Cryptographic Identity Material
+</pre>
+
+### 4.2 Generate Cryptographic Identity Material
 Before booting proxies with TLS enabled, generate self-signed operational certificate authority arrays within the project folder root:
 
-Bash
+<pre>
 openssl req -x509 -newkey rsa:4096 -keyout key.pem -out cert.pem -sha256 -days 365 -nodes -subj "/CN=localhost"
-4.3 Component Boot Sequence
+</pre>
+
+### 4.3 Component Boot Sequence
 Launch the individual infrastructure scripts within isolated terminal windows or container definitions in the following order:
 
-Boot the Legacy Destination Application:
+1. **Boot the Legacy Destination Application:**
+   <pre>python3 mock_business_server.py</pre>
+2. **Boot the Decryption Target Server Proxy:**
+   <pre>python3 target_server.py</pre>
+3. **Boot the Local Client Encryption Gateway:**
+   <pre>python3 client_gateway.py</pre>
 
-Bash
-python3 mock_business_server.py
-Boot the Decryption Target Server Proxy:
-
-Bash
-python3 target_server.py
-Boot the Local Client Encryption Gateway:
-
-Bash
-python3 client_gateway.py
-4.4 Execute Data Transmission Test
+### 4.4 Execute Data Transmission Test
 Inject a sample plaintext payload directly into the client proxy ingest loop to verify data translation and end-to-end cryptographic integrity:
 
-Bash
-curl -X POST [http://127.0.0.1:8001/transmit](http://127.0.0.1:8001/transmit) \
+<pre>
+curl -X POST http://127.0.0.1:8001/transmit \
      -H "Content-Type: application/json" \
      -d '{"message": "Confidential Production Data Assets"}'
-<div style="page-break-before: always;"></div>
+</pre>
 
-5. Security Architecture & Threat Mitigation
+---
+
+## 5. Security Architecture & Threat Mitigation
+
 To maintain strict compliance with cybersecurity defensive design principles, the following hardening routines are natively compiled into the system core:
 
-Isolated Path Rate-Limiting: To prevent algorithmic denial-of-service or side-channel brute-forcing attacks, rate-limiting windows are split by path (/handshake and /secure-receive). This allows rapid multi-step handshakes from legitimate clients while throttling high-frequency brute-force parameter flooding.
+* **Isolated Path Rate-Limiting:** To prevent algorithmic denial-of-service or side-channel brute-forcing attacks, rate-limiting windows are split by path (`/handshake` and `/secure-receive`). This allows rapid multi-step handshakes from legitimate clients while throttling high-frequency brute-force parameter flooding.
+* **Automated Session Janitor Context:** An active asynchronous loop scans active handshake sessions in memory. States that do not close transactions within the `session_ttl` boundary are dropped, and their reference handles are closed. 
+* **Volatile Memory Scrubbing:** Immediately following key derivation via the HKDF loop, secret material array references are targeted for immediate memory release, followed by active `gc.collect()` execution to prevent information exposure via memory dump exploitation vectors.
 
-Automated Session Janitor Context: An active asynchronous loop scans active handshake sessions in memory. States that do not close transactions within the session_ttl boundary are dropped, and their reference handles are closed.
+---
 
-Volatile Memory Scrubbing: Immediately following key derivation via the HKDF loop, secret material array references are targeted for immediate memory release, followed by active gc.collect() execution to prevent information exposure via memory dump exploitation vectors.
+## 6. Licensing & Open Source Compliance
 
-6. Licensing & Open Source Compliance
-This core engine is published under the Apache License 2.0. Permissions include commercial use, modification, distribution, and private use, providing an ideal open-core foundation for building advanced, proprietary closed-source integration software modules.
-
-</div>
+This core engine is published under the **Apache License 2.0**. Permissions include commercial use, modification, distribution, and private use, providing an ideal open-core foundation for building advanced, proprietary closed-source integration software modules.
