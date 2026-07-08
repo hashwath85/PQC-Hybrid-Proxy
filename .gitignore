@@ -1,0 +1,13 @@
+# Cryptographic Keys and Certificates
+*.pem
+*.key
+*.crt
+
+# Python Environment Assets
+__pycache__/
+*.pyc
+.venv/
+env/
+
+# Local Configurations
+.env
